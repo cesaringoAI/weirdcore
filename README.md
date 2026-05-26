@@ -1,0 +1,2 @@
+# weirdcore
+weird core test
