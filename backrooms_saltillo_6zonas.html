@@ -1,0 +1,937 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#05050a;--s1:#0c0c12;--s2:#12121a;
+  --g:#3dc87a;--r:#b03030;--or:#e07830;
+  --muted:#46465a;--cream:#ccc4a0;--w:#ddd8cc;
+  --fe:'Special Elite',serif;--mo:'Share Tech Mono',monospace;
+}
+html,body{background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.root{color:var(--w);max-width:680px;margin:0 auto;position:relative;min-height:100vh;display:flex;flex-direction:column}
+
+/* SCAN */
+.scan{position:fixed;top:0;left:0;width:100%;height:1px;background:rgba(61,200,122,.08);z-index:900;pointer-events:none;animation:sc 18s linear infinite}
+@keyframes sc{0%{top:-1px}100%{top:100vh}}
+
+/* SHADOW FIGURE — elemento sutil inquietante */
+.shadow-fig{position:fixed;bottom:0;right:-30px;width:60px;height:180px;pointer-events:none;z-index:5;opacity:0;transition:opacity 3s}
+.shadow-fig.vis{opacity:.07}
+.shadow-fig svg{width:100%;height:100%}
+
+/* FLICKER puntual */
+@keyframes flk{0%,96%,100%{opacity:1}97%{opacity:.2}98%{opacity:1}99%{opacity:.4}}
+.flicker{animation:flk 8s infinite}
+
+/* MASK */
+.mask{position:fixed;inset:0;background:var(--bg);z-index:800;pointer-events:none;opacity:0;transition:opacity .6s}
+.mask.in{opacity:1}
+
+/* HEADER */
+.hdr{padding:.6rem 1.2rem;border-bottom:1px solid #0f0f18;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(5,5,10,.95);z-index:10;backdrop-filter:blur(4px)}
+.hdr-brand{font-family:var(--mo);font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.hdr-brand b{color:var(--or);font-weight:normal}
+.hdr-right{font-family:var(--mo);font-size:9px;color:var(--muted);text-align:right;line-height:1.5}
+.live{color:var(--g)}.warn{color:var(--or)}.err{color:var(--r)}
+
+/* SCREENS */
+.screen{display:none;flex:1;flex-direction:column}
+.screen.on{display:flex}
+
+/* GEOLOC SCREEN */
+.geo-body{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:2rem 1.4rem 3rem}
+.geo-eye{width:60px;height:60px;margin-bottom:2rem}
+.geo-eyebrow{font-family:var(--mo);font-size:9px;letter-spacing:4px;color:var(--or);text-transform:uppercase;margin-bottom:1rem}
+.geo-title{font-family:var(--fe);font-size:clamp(30px,8vw,46px);color:var(--w);line-height:1.1;margin-bottom:.8rem}
+.geo-title em{color:var(--g);font-style:normal}
+.geo-sub{font-family:var(--mo);font-size:11px;color:var(--muted);line-height:1.9;margin-bottom:2rem;max-width:340px}
+.geo-sub span{color:var(--cream)}
+.geo-cta{font-family:var(--mo);font-size:11px;letter-spacing:3px;color:var(--bg);background:var(--or);border:none;padding:1rem 2.2rem;cursor:pointer;text-transform:uppercase;transition:background .2s;align-self:flex-start;margin-bottom:.8rem}
+.geo-cta:hover,.geo-cta:active{background:var(--w)}
+.geo-skip{font-family:var(--mo);font-size:9px;color:var(--muted);letter-spacing:1px;background:transparent;border:none;cursor:pointer;padding:.3rem 0;text-transform:uppercase;text-decoration:underline;text-underline-offset:3px}
+.geo-skip:hover{color:var(--cream)}
+.geo-credit{font-family:var(--mo);font-size:9px;color:var(--muted);margin-top:2.5rem;line-height:1.9;letter-spacing:.5px}
+.geo-credit span{color:var(--or)}
+
+/* LOCATING */
+.loc-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;gap:1rem}
+.loc-dot{width:8px;height:8px;background:var(--g);border-radius:50%;animation:ldot 1.2s ease-in-out infinite}
+@keyframes ldot{0%,100%{transform:scale(.6);opacity:.4}50%{transform:scale(1.2);opacity:1}}
+.loc-text{font-family:var(--mo);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.loc-zone{font-family:var(--fe);font-size:18px;color:var(--or);margin-top:.5rem;min-height:26px}
+
+/* STORY */
+.story-prog{height:1px;background:#111;flex-shrink:0}
+.story-prog-fill{height:100%;background:var(--or);transition:width 1s;opacity:.8}
+.story-hdr{padding:.7rem 1.2rem;border-bottom:1px solid #0f0f18;display:flex;align-items:center;gap:.8rem;flex-shrink:0}
+.story-dot{width:5px;height:5px;background:var(--g);border-radius:50%;animation:ldot 2s infinite;flex-shrink:0}
+.story-level{font-family:var(--mo);font-size:8px;letter-spacing:3px;color:var(--or);text-transform:uppercase}
+.story-body{padding:1.4rem 1.4rem .5rem}
+.story-title{font-family:var(--fe);font-size:clamp(20px,5.5vw,28px);color:var(--w);line-height:1.25;margin-bottom:1.1rem}
+.story-text{font-family:var(--fe);font-size:clamp(15px,4vw,17px);color:var(--cream);line-height:2.1;font-style:italic;margin-bottom:1.2rem}
+.story-text em{color:var(--r);font-style:normal}
+.story-text strong{color:var(--w);font-style:normal;font-weight:normal}
+.story-text .ac{color:var(--or);font-style:normal}
+
+/* VISUAL ELEMENT — espacio placeholder con código */
+.vis-ph{width:100%;border:1px solid #151520;background:var(--s1);display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:1rem 1.2rem;flex-shrink:0;position:relative;overflow:hidden}
+.vis-ph.tall{aspect-ratio:3/4}
+.vis-ph.wide{aspect-ratio:16/9}
+.vis-ph-grid{position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.012) 40px),repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.012) 40px)}
+.vis-ph-id{font-family:var(--mo);font-size:8px;color:#1e1e2a;letter-spacing:2px;text-transform:uppercase;margin-bottom:.3rem}
+.vis-ph-label{font-family:var(--mo);font-size:9px;color:var(--muted);letter-spacing:1px;line-height:1.6;max-width:90%}
+.vis-ph-icon{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:.06}
+.vis-ph-icon svg{width:48px;height:48px}
+
+/* AMBIENT MARK — marca sutil tipo grieta/mancha */
+.amb{position:absolute;top:0;right:0;width:120px;height:120px;opacity:.03;pointer-events:none}
+
+/* CHOICES */
+.choices{padding:.5rem 1.2rem 2rem;display:flex;flex-direction:column;gap:5px}
+.ch{background:transparent;border:1px solid #181822;color:var(--muted);padding:1rem 1.2rem;font-family:var(--mo);font-size:11px;cursor:pointer;text-align:left;line-height:1.6;transition:all .2s;position:relative}
+.ch:hover,.ch:active{background:rgba(224,120,48,.06);border-color:var(--or);color:var(--w)}
+.ch-n{color:var(--or);margin-right:.5rem}
+
+/* ENDING */
+.end-body{flex:1;padding:1.4rem}
+.end-label{font-family:var(--mo);font-size:8px;letter-spacing:3px;color:var(--or);text-transform:uppercase;border-left:2px solid var(--or);padding-left:.8rem;margin-bottom:1rem}
+.end-title{font-family:var(--fe);font-size:clamp(22px,6vw,30px);color:var(--w);line-height:1.2;margin-bottom:1.2rem}
+.end-text{font-family:var(--fe);font-size:clamp(14px,3.8vw,16px);color:var(--cream);line-height:2.1;font-style:italic;margin-bottom:2rem}
+.end-text em{color:var(--r);font-style:normal}
+.end-text .ac{color:var(--or);font-style:normal}
+.restart-btn{font-family:var(--mo);font-size:9px;letter-spacing:2px;color:var(--bg);background:var(--or);border:none;padding:.8rem 1.6rem;cursor:pointer;text-transform:uppercase;transition:background .2s}
+.restart-btn:hover{background:var(--w)}
+.credit-foot{font-family:var(--mo);font-size:9px;color:var(--muted);padding:1.2rem;border-top:1px solid #0f0f18;line-height:1.9;letter-spacing:.5px}
+.credit-foot span{color:var(--or)}
+
+/* TICKER */
+.ticker{overflow:hidden;border-top:1px solid #0f0f18;padding:.35rem 0;flex-shrink:0}
+.ticker-in{display:inline-block;white-space:nowrap;animation:tk 38s linear infinite;font-size:9px;color:var(--muted);font-family:var(--mo);letter-spacing:1px}
+@keyframes tk{0%{transform:translateX(100vw)}100%{transform:translateX(-100%)}}
+
+@keyframes fin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.fin{animation:fin .7s ease both}
+
+/* ZONA BADGE */
+.zona-badge{display:inline-block;font-family:var(--mo);font-size:8px;letter-spacing:2px;color:var(--bg);background:var(--or);padding:.25rem .7rem;text-transform:uppercase;margin-bottom:.8rem}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div class="mask" id="mask"></div>
+
+<!-- Figura sutil en esquina -->
+<div class="shadow-fig" id="sfig">
+  <svg viewBox="0 0 60 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="30" cy="18" rx="10" ry="12" fill="white"/>
+    <rect x="18" y="30" width="24" height="70" rx="4" fill="white"/>
+    <rect x="8" y="32" width="12" height="50" rx="4" fill="white"/>
+    <rect x="40" y="32" width="12" height="50" rx="4" fill="white"/>
+    <rect x="16" y="98" width="13" height="60" rx="4" fill="white"/>
+    <rect x="31" y="98" width="13" height="60" rx="4" fill="white"/>
+  </svg>
+</div>
+
+<div class="root">
+
+  <div class="hdr">
+    <div class="hdr-brand"><b>Vanguardia</b> IA Lab</div>
+    <div class="hdr-right">
+      <span id="sysTime" class="live">--:--</span><br>
+      <span id="sysZona" style="color:var(--muted)">--</span>
+    </div>
+  </div>
+
+  <!-- PANTALLA GEO -->
+  <div id="geoScreen" class="screen on">
+    <div class="geo-body">
+      <svg class="geo-eye" viewBox="0 0 60 60" fill="none">
+        <ellipse cx="30" cy="30" rx="28" ry="18" stroke="#3dc87a" stroke-width=".8" opacity=".4"/>
+        <circle cx="30" cy="30" r="9" stroke="#3dc87a" stroke-width=".8" opacity=".6"/>
+        <circle cx="30" cy="30" r="3" fill="#3dc87a" opacity=".8"/>
+        <line x1="2" y1="30" x2="58" y2="30" stroke="#3dc87a" stroke-width=".4" opacity=".2"/>
+      </svg>
+      <div class="geo-eyebrow">Saltillo · espacios liminales</div>
+      <div class="geo-title">Alguien<br>dejó la<br><em>luz prendida</em></div>
+      <div class="geo-sub">Una historia generada según donde estás.<br><span>Los lugares son reales. Lo que pasa en ellos, depende de ti.</span></div>
+      <button class="geo-cta" onclick="requestGeo()">Localizar mi zona →</button>
+      <button class="geo-skip" onclick="assignZone(null)">Continuar sin ubicación</button>
+      <div class="geo-credit">
+        Idea: <span>Carlos Mirón</span> y <span>César Gaytán</span><br>
+        Una experiencia de <span>Vanguardia IA Lab</span> · Saltillo, Coahuila
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCATING -->
+  <div id="locScreen" class="screen">
+    <div class="loc-body">
+      <div class="loc-dot"></div>
+      <div class="loc-text">Detectando tu zona</div>
+      <div class="loc-zone" id="locZoneLabel"></div>
+    </div>
+  </div>
+
+  <!-- HISTORIA -->
+  <div id="storyScreen" class="screen">
+    <div class="story-prog"><div class="story-prog-fill" id="prog" style="width:0%"></div></div>
+    <div class="story-hdr">
+      <div class="story-dot"></div>
+      <div class="story-level" id="sLevel">NIVEL 0</div>
+    </div>
+    <div id="storyContent"></div>
+    <div class="ticker"><div class="ticker-in" id="tickerTxt">LUZ FLUORESCENTE · NIVEL 0 · SIN SALIDA DOCUMENTADA · ¿RECUERDAS CÓMO LLEGASTE? · &nbsp;</div></div>
+  </div>
+
+  <!-- FINAL -->
+  <div id="endScreen" class="screen">
+    <div class="story-prog"><div class="story-prog-fill" style="width:100%;opacity:.4"></div></div>
+    <div class="end-body" id="endContent"></div>
+    <div class="ticker"><div class="ticker-in">FIN DEL REGISTRO · O QUIZÁ NO · LOS PASILLOS SIGUEN AHÍ · ¿RECUERDAS CÓMO SALISTE? · &nbsp;</div></div>
+    <div class="credit-foot">
+      Idea: <span>Carlos Mirón</span> y <span>César Gaytán</span> · Una experiencia de <span>Vanguardia IA Lab</span> · Saltillo, Coahuila
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   HISTORIAS POR ZONA
+══════════════════════════════════════════════ */
+const HISTORIAS = {
+
+/* ─── 1. CENTRO ─────────────────────────────── */
+centro:{
+  zona:'Centro Histórico',
+  ticker:'PLAZA DE ARMAS · LA CATEDRAL SIEMPRE ABIERTA · XICOTÉNCATL Y VICTORIA · LA MANO DE TU MADRE TE SOLTÓ · 6:00 PM · SIEMPRE · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — RECONOCIMIENTO',
+      ph:{id:'CTR-PARISINA-01',label:'Tienda de telas · La Parisina · Victoria y Xicoténcatl · luz fluorescente · nadie',ratio:'tall'},
+      title:'La mano de tu madre te soltó hace un segundo.',
+      text:`Estás en La Parisina. Victoria y Xicoténcatl. Los rollos de tela están suspendidos como columnas: rosa, azul, beige, naranja. Nadie eligió todavía qué forma van a tener.\n\nEl zumbido agudo se pega a todo. <em>A las telas, a la luz, a tus dientes.</em> 60 Hz. El cuerpo lo registra aunque la mente no lo sabe.\n\n<strong>Tienes ocho años.</strong> O tienes los que tienes. Da lo mismo: en este espacio, la edad no funciona igual.`,
+      choices:[
+        {t:'Buscar a tu madre entre los rollos',n:'s1a'},
+        {t:'Quedarte quieto donde te dijo',n:'s1b'},
+        {t:'Mirar hacia la calle por el cristal',n:'s1c'},
+      ]
+    },
+    s1a:{
+      level:'NIVEL 1 — BÚSQUEDA',
+      ph:{id:'CTR-PARISINA-02',label:'Pasillo de rollos · perspectiva infinita · nadie al fondo',ratio:'tall'},
+      title:'El pasillo entre los rollos es más largo de lo que cabe en la tienda.',
+      text:`Caminaste tres metros y la entrada ya no se ve. Los rollos se cierran a ambos lados. La luz fluorescente baja desde el techo como agua estancada.\n\nAl fondo hay algo que podría ser tu madre. <em>La misma silueta. La misma altura.</em> Pero no se mueve. Las señoras que piden telas tampoco se mueven. El dependiente tampoco.\n\n<strong>Solo tú.</strong>`,
+      choices:[
+        {t:'Acercarme a la silueta',n:'s2a'},
+        {t:'Llamar en voz alta',n:'s2b'},
+      ]
+    },
+    s1b:{
+      level:'NIVEL 1 — ESPERA',
+      ph:{id:'CTR-ESPERA-01',label:'Punto de espera · caja · señoras inmóviles · tijeras sobre mostrador',ratio:'wide'},
+      title:'Te quedaste quieto. El tiempo también.',
+      text:`Las señoras pidiendo listones se detuvieron. No de golpe: <em>fueron desacelerando</em> hasta quedar perfectamente inmóviles. La dependienta con las tijeras abiertas a la mitad del corte.\n\nEl silencio tiene textura. Como el fieltro. Como el terciopelo. Como algo que se puede tocar si extendieras la mano.\n\n<strong>El reloj de la pared marca las 6:00 PM.</strong> Lleva marcando las 6:00 PM desde antes de que entraras.`,
+      choices:[
+        {t:'Tocar la manga de la dependienta',n:'s2b'},
+        {t:'Salir hacia la Plaza de Armas',n:'s2c'},
+      ]
+    },
+    s1c:{
+      level:'NIVEL 1 — EXTERIOR',
+      ph:{id:'CTR-PLAZA-01',label:'Victoria y Xicoténcatl · calle vacía · semáforo verde permanente',ratio:'wide'},
+      title:'La calle afuera está vacía. El semáforo lleva en verde.',
+      text:`Por el cristal: Victoria y Xicoténcatl perfectamente vacías. No hay un auto. No hay una persona. El semáforo en la esquina está en verde y lleva así, quieto, sin ciclar.\n\n<em>La catedral al fondo sigue igual.</em> Pero algo en el ángulo no está bien. Como si se hubiera movido unos grados. Como si el centro histórico practicó una respiración muy lenta mientras no mirabas.\n\n<strong>La puerta de la tienda no tiene manija desde adentro.</strong>`,
+      choices:[
+        {t:'Buscar otra salida',n:'s2b'},
+        {t:'Sentarme a esperar',n:'s1b'},
+      ]
+    },
+    s2a:{
+      level:'NIVEL 2 — PRESENCIA',
+      ph:{id:'CTR-SILUETA-01',label:'Silueta entre rollos · sin rostro visible · tela color durazno',ratio:'tall'},
+      title:'—Mamá, ¿por qué hay una señora escondida entre las telas?',
+      text:`La pregunta la hiciste de niño. Ahora la recuerdas. Esa voz que tienen los niños cuando <em>ya saben la respuesta</em> pero quieren que alguien les confirme que no es real.\n\nEl roll de tela color durazno tiene la silueta exacta de alguien que se quedó muy quieto. No respira. <strong>Solo espera.</strong>\n\nNadie te contestó entonces.`,
+      choices:[
+        {t:'Tocar el roll',n:'end_presencia'},
+        {t:'Correr hacia la calle',n:'end_salida'},
+      ]
+    },
+    s2b:{
+      level:'NIVEL 2 — RESONANCIA',
+      ph:{id:'CTR-ECO-01',label:'Interior tienda · eco · figura al fondo que aparece al llamar',ratio:'wide'},
+      title:'Tu voz regresó diferente.',
+      text:`Llamaste. El eco rebotó entre los rollos y tardó cuatro segundos en regresar. Más de lo que cabe en este espacio.\n\nCuando regresó tenía <em>una frecuencia ligeramente distinta.</em> Como si el espacio le añadió algo en el recorrido. Una segunda voz. Casi idéntica. Casi.\n\n<strong>Después del eco: pasos.</strong> Regulares. Vienen del fondo. Cuentan hacia abajo.`,
+      choices:[
+        {t:'Quedarme quieto',n:'end_eco'},
+        {t:'Salir corriendo',n:'end_salida'},
+      ]
+    },
+    s2c:{
+      level:'NIVEL 2 — PLAZA',
+      ph:{id:'CTR-PLAZAARMAS-01',label:'Plaza de Armas vacía · catedral · banca sola · mediodía sin sombra',ratio:'tall'},
+      title:'La Plaza de Armas a las 6 PM no tiene sombras.',
+      text:`Saliste. La plaza está vacía. Las bancas, la fuente, los árboles, <em>pero sin nadie.</em> Lo raro no es la ausencia de personas. Lo raro es que no hay sombras. El sol de las 6 PM debería alargar las sombras hacia el oriente. No hay sombras.\n\nLa catedral tiene las puertas abiertas. Siempre las tiene.\n\n<strong>De adentro sale un zumbido.</strong> 60 Hz. El mismo de la tienda.`,
+      choices:[
+        {t:'Entrar a la catedral',n:'end_catedral'},
+        {t:'Quedarme en la plaza',n:'end_espera'},
+      ]
+    },
+    end_presencia:{ending:true,label:'FINAL — LA TELA',ph:{id:'CTR-END-TELA-01',label:'Tienda de telas · luz fría · nadie · o alguien · siempre 6 PM',ratio:'tall'},
+      title:'Ya eres parte del espacio.',
+      text:`No había nadie. Claro que no. Pero cuando buscas la entrada, el pasillo es diferente. Más largo. Las señoras volvieron a moverse. Piden metros de tela. Te miran. Te preguntan qué necesitas.\n\nEmpiezas a contestar. Pides metros. <em>No sabes para qué.</em> Pero los pides. Llevas haciéndolo desde las 6 PM.\n\n<class class="ac">Siempre las 6 PM.</class>\n\nLa niñez se rompió un poco. Todo lo demás siguió igual.`
+    },
+    end_salida:{ending:true,label:'FINAL — LA CALLE',ph:{id:'CTR-END-CALLE-01',label:'Victoria y Xicoténcatl · semáforo verde · tu auto · tablero 6 PM',ratio:'wide'},
+      title:'Saliste. Pero el semáforo sigue en verde.',
+      text:`La calle tiene personas otra vez. El semáforo cicla normal. Tu teléfono tiene señal.\n\nArrancas. En el retrovisor: la fachada de La Parisina. La puerta cerrada. Y en el cristal, <em>desde adentro</em>, una mano que te dice adiós.\n\nNo era tu madre. O sí. Ya no puedes saberlo. <class class="ac">El tablero del auto dice 6:00 PM.</class>`
+    },
+    end_eco:{ending:true,label:'FINAL — EL ZUMBIDO',ph:{id:'CTR-END-ECO-01',label:'Interior · rollos detenidos · luz parpadeando · figura inmóvil',ratio:'tall'},
+      title:'Te quedaste tan quieto que el espacio no te encontró.',
+      text:`Los pasos llegaron hasta donde estabas y pasaron de largo. El espacio no te vio porque <em>eras tan parte de él</em> como los rollos de tela.\n\nCuando todo volvió, las señoras pedían listones, las tijeras cortaban, el zumbido era normal. Tú seguías ahí, de pie, entre los rollos.\n\nTardaste tres días en darte cuenta de que podías moverte. <class class="ac">Nadie en la tienda lo notó.</class>`
+    },
+    end_catedral:{ending:true,label:'FINAL — LA CATEDRAL',ph:{id:'CTR-END-CATEDRA-01',label:'Interior catedral · bancas vacías · luz filtrada · zumbido',ratio:'tall'},
+      title:'El zumbido en la catedral tiene 60 años.',
+      text:`Entraste. Las bancas vacías. La luz filtrada por los vitrales. Y el zumbido, <em>exactamente el mismo</em> que en La Parisina. 60 Hz.\n\nAlguien instaló los primeros fluorescentes aquí hace décadas. El espacio los absorbió. Ahora son parte de su frecuencia natural.\n\nTe sentaste en una banca. <class class="ac">Llevas ahí desde antes de que empezara esta historia.</class>`
+    },
+    end_espera:{ending:true,label:'FINAL — LA PLAZA',ph:{id:'CTR-END-PLAZA-01',label:'Plaza de Armas · banca · sombras que regresan · una persona más',ratio:'wide'},
+      title:'Las sombras volvieron. Tú también.',
+      text:`Las sombras regresaron cuando dejaste de buscarlas. El sol cicló. Aparecieron personas. La plaza volvió a ser la plaza.\n\nEn la banca de al lado hay alguien que lleva ahí más tiempo que tú. <em>Te mira sin mirarte.</em> Hace lo que hace la gente en las plazas históricas: existe, espera, ocupa espacio.\n\n<class class="ac">Ahora tú también.</class>`
+    },
+  }
+},
+
+/* ─── 2. NORTE ──────────────────────────────── */
+norte:{
+  zona:'Zona Norte',
+  ticker:'LAS TORRES · REPÚBLICA · EL PALOMAR · COLONIA SIN NOMBRE · CALLES QUE TERMINAN EN NADA · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — COLONIA',
+      ph:{id:'NRT-CALLE-01',label:'Calle residencial norte · noche · bardas altas · una sola luz',ratio:'tall'},
+      title:'El fraccionamiento tiene una calle que no está en Maps.',
+      text:`Vives aquí. O vivías. O alguien que se parece a ti vive aquí. Las bardas altas de los fraccionamientos del norte de Saltillo son todas iguales: beige, tres metros, intercomunicador sin respuesta.\n\nHay una calle que no recuerdas haber visto antes. <em>Aparece entre la Décima y la Undécima.</em> No tiene nombre en la placa. Solo un número que parece un código.\n\n<strong>La calle termina en una barda igual a las demás.</strong>`,
+      choices:[
+        {t:'Entrar a la calle sin nombre',n:'s1a'},
+        {t:'Fotografiarla con el teléfono',n:'s1b'},
+        {t:'Llamar al intercomunicador de la barda',n:'s1c'},
+      ]
+    },
+    s1a:{
+      level:'NIVEL 1 — LA CALLE',
+      ph:{id:'NRT-CALLEFONDO-01',label:'Calle sin salida · barda al fondo · luz verde · silencio',ratio:'tall'},
+      title:'La barda al fondo no estaba ahí hace diez segundos.',
+      text:`Caminaste treinta metros. La barda apareció. No creció: simplemente estaba. Como si siempre hubiera estado y tú no la habías visto antes.\n\n<em>A tu espalda, la entrada de la calle se cerró.</em> No hay una puerta. La barda está ahí desde siempre. La calle ahora tiene dieciocho metros de largo y no tiene salida.\n\n<strong>El intercomunicador de la barda nueva suena antes de que lo toques.</strong>`,
+      choices:[
+        {t:'Contestar el intercomunicador',n:'s2a'},
+        {t:'Escalar la barda',n:'s2b'},
+      ]
+    },
+    s1b:{
+      level:'NIVEL 1 — FOTOGRAFÍA',
+      ph:{id:'NRT-TELEFONO-01',label:'Pantalla de teléfono · foto de calle · algo extra que no estaba',ratio:'wide'},
+      title:'La foto tiene algo que no estaba cuando la tomaste.',
+      text:`La pantalla muestra la calle. La barda al fondo. La sola lámpara. Y en el tercio izquierdo de la imagen, <em>contra una de las bardas laterales</em>, una figura de pie. Muy quieta.\n\nVolteas. No hay nadie. Vuelves a mirar la foto. <strong>La figura ahora está más cerca del centro.</strong>\n\nNo tomaste una segunda foto.`,
+      choices:[
+        {t:'Entrar a la calle para verificar',n:'s1a'},
+        {t:'Salir corriendo hacia la avenida',n:'end_salida'},
+      ]
+    },
+    s1c:{
+      level:'NIVEL 1 — INTERCOMUNICADOR',
+      ph:{id:'NRT-INTERCOM-01',label:'Intercomunicador · estática · calle vacía al fondo',ratio:'wide'},
+      title:'Alguien contestó antes del primer timbre.',
+      text:`Apretaste el botón. El timbre no sonó. Pero del altavoz salió una voz inmediatamente. No dijiste quién eres. Ellos tampoco.\n\nLa voz dijo: <em>"Ya sabemos que estás aquí."</em>\n\nDespués: silencio. Después: el zumbido familiar. <strong>60 Hz.</strong>`,
+      choices:[
+        {t:'Preguntar quiénes son',n:'s2a'},
+        {t:'Alejarse rápido',n:'end_salida'},
+      ]
+    },
+    s2a:{
+      level:'NIVEL 2 — COMUNICACIÓN',
+      ph:{id:'NRT-ADENTRO-01',label:'Interior de barda · patio · luz beige · sin personas visibles',ratio:'tall'},
+      title:'La puerta se abrió sola.',
+      text:`Entraste porque la puerta se abrió y la lógica del espacio indicaba que debías entrar. El patio interior tiene césped artificial y una mesa de jardín con cuatro sillas. Todo perfectamente normal.\n\n<em>Excepto que las sillas están puestas mirando hacia adentro de la casa.</em> No hacia el jardín. Hacia adentro. Como si en la sala hubiera algo que observar.\n\n<strong>Las ventanas de la sala están oscuras.</strong>`,
+      choices:[
+        {t:'Acercarme a la ventana',n:'end_ventana'},
+        {t:'Sentarme en una de las sillas',n:'end_espera'},
+      ]
+    },
+    s2b:{
+      level:'NIVEL 2 — ALTURA',
+      ph:{id:'NRT-BARDA-TOP-01',label:'Vista desde barda · ciudad norte · sin personas · silencio total',ratio:'wide'},
+      title:'Desde arriba de la barda, la ciudad norte no tiene personas.',
+      text:`Subiste. La vista desde la barda muestra el fraccionamiento entero. Las calles paralelas, los techos, los autos estacionados.\n\nNo hay personas. <em>Ninguna.</em> Los autos están pero no hay nadie. Las luces de las casas están encendidas pero no hay sombras moviéndose adentro.\n\n<strong>Solo tú, tres metros arriba, mirando una ciudad que respira sin habitantes.</strong>`,
+      choices:[
+        {t:'Bajar al otro lado',n:'end_otrolado'},
+        {t:'Quedarme mirando',n:'end_espera'},
+      ]
+    },
+    end_salida:{ending:true,label:'FINAL — LA AVENIDA',ph:{id:'NRT-END-AV-01',label:'Avenida norte · tráfico normal · fraccionamiento al fondo · calle sin nombre ya no existe',ratio:'wide'},
+      title:'La calle sin nombre ya no está.',
+      text:`Llegaste a la avenida. El tráfico normal. Los negocios. Las personas.\n\nVolteas hacia donde estaba la calle. <em>No está.</em> Entre la Décima y la Undécima hay solo barda continua, sin apertura.\n\nTu teléfono tiene señal. La foto que tomaste todavía está guardada. La figura en la imagen <class class="ac">ahora está mirando hacia la cámara.</class>`
+    },
+    end_ventana:{ending:true,label:'FINAL — LA SALA',ph:{id:'NRT-END-SALA-01',label:'Ventana desde afuera · sala con muebles · algo en el sillón · o nadie',ratio:'wide'},
+      title:'En el sillón hay alguien sentado mirando hacia afuera.',
+      text:`Te acercaste a la ventana. La sala tiene muebles beige. Televisor apagado. Y en el sillón del centro: <em>alguien sentado mirando hacia la ventana.</em> Mirándote a ti.\n\nNo tiene expresión. No se mueve. Está ahí como están los muebles: como parte del espacio, sin intención aparente.\n\n<class class="ac">Llevas tres minutos sin moverte tú tampoco.</class> Algo en la lógica del lugar indica que si te mueves primero, pierdes.`
+    },
+    end_espera:{ending:true,label:'FINAL — LA SILLA',ph:{id:'NRT-END-SILLA-01',label:'Silla de jardín · patio · nadie más · amanecer o anochecer indistinguible',ratio:'wide'},
+      title:'La silla era más cómoda de lo que parecía.',
+      text:`Te sentaste. La vista del patio es perfectamente normal y perfectamente inexplicable al mismo tiempo. Un árbol. El césped artificial. El zumbido de la electricidad de las bardas.\n\n<em>Llevas aquí suficiente tiempo para que cambie la luz.</em> No sabes si amanece o anochece. Las dos cosas se parecen mucho desde una silla de jardín en el norte de Saltillo.\n\n<class class="ac">Nadie vino a preguntarte quién eres.</class> Quizá ya lo saben.`
+    },
+    end_otrolado:{ending:true,label:'FINAL — EL OTRO LADO',ph:{id:'NRT-END-OTRO-01',label:'Calle al otro lado de la barda · idéntica a la de entrada · misma lámpara',ratio:'tall'},
+      title:'El otro lado es la misma calle.',
+      text:`Bajaste al otro lado. La calle es idéntica. La misma lámpara. La misma barda al fondo. El mismo código sin nombre en la placa.\n\n<em>Excepto que ahora estás solo.</em> No hay fraccionamiento detrás de ti. La barda por la que bajaste ya no existe.\n\nBuscas tu teléfono para fotografiar. <class class="ac">La foto que tomaste antes ya no está guardada. En su lugar, una foto que no tomaste: tú, de espaldas, escalando una barda.</class>`
+    },
+  }
+},
+
+/* ─── 3. SUR ────────────────────────────────── */
+sur:{
+  zona:'Zona Sur',
+  ticker:'RAMOS ARIZPE · LOS VIÑEDOS · CALZADA · EL CAMPESTRE · CASAS QUE PROMETIERON ALGO · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — ORIGEN',
+      ph:{id:'SUR-PARQUE-01',label:'Parque nocturno zona sur · basurero forma de oso · juegos vacíos · lluvia',ratio:'tall'},
+      title:'El parque a medianoche guarda versiones de ti.',
+      text:`La Deportiva. O el parque de tu colonia. O cualquier parque del sur de Saltillo a una hora que no tiene nombre.\n\nEl basurero tiene forma de oso. Boca abierta. Ojos pintados mirando hacia arriba. En algún momento fue rosa brillante. Ahora es el color de algo que lleva esperando.\n\n<em>Los juegos infantiles no se mueven aunque hay viento.</em> Los focos iluminan los árboles desde abajo. Las sombras van para el lado equivocado.`,
+      choices:[
+        {t:'Caminar por el pasillo de árboles',n:'s1a'},
+        {t:'Sentarme junto al basurero-oso',n:'s1b'},
+        {t:'Ir a los juegos infantiles',n:'s1c'},
+      ]
+    },
+    s1a:{
+      level:'NIVEL 1 — EL PASILLO',
+      ph:{id:'SUR-ARBOLES-01',label:'Pasillo de árboles · focos · reflejos en charcos · fin que no llega',ratio:'tall'},
+      title:'El pasillo de árboles no termina donde debería.',
+      text:`Caminaste. Los focos se repiten. Los árboles se repiten. Los charcos reflejan una luz que no corresponde a ningún foco visible.\n\nLlevas caminando más tiempo del que cabe en el parque. <em>El parque mide doscientos metros de un extremo al otro.</em> Llevas caminando trescientos.\n\n<strong>El pasillo sigue.</strong>`,
+      choices:[
+        {t:'Seguir caminando',n:'s2a'},
+        {t:'Regresar',n:'s2b'},
+      ]
+    },
+    s1b:{
+      level:'NIVEL 1 — EL OSO',
+      ph:{id:'SUR-OSO-01',label:'Basurero oso · de cerca · boca abierta · algo adentro',ratio:'wide'},
+      title:'El oso tiene algo adentro que no es basura.',
+      text:`De cerca los ojos tienen expresión. No la expresión de un objeto decorativo: la expresión de algo que lleva <em>mucho tiempo esperando que alguien se acerque suficiente.</em>\n\nEn la boca abierta hay un papel doblado. Perfectamente doblado. Como si alguien lo puso ahí para que lo encontraras tú, específicamente.\n\n<strong>El papel tiene tu nombre.</strong>`,
+      choices:[
+        {t:'Leer el resto del papel',n:'s2c'},
+        {t:'Dejarlo y alejarse',n:'s1a'},
+      ]
+    },
+    s1c:{
+      level:'NIVEL 1 — LOS JUEGOS',
+      ph:{id:'SUR-JUEGOS-01',label:'Juegos infantiles noche · resbaladero · sin niños · columpio que se mueve solo',ratio:'tall'},
+      title:'El columpio se mueve sin viento.',
+      text:`Te acercaste a los juegos. El columpio oscila con una regularidad que no es del viento. Es mecánica. Como si alguien lo empujó hace treinta segundos y la inercia todavía está ahí.\n\n<em>O como si alguien lo empuja ahora y no puedes verlo.</em>\n\nEl resbaladero tiene marcas de manos en el metal. Recientes. <strong>Más pequeñas que las tuyas.</strong>`,
+      choices:[
+        {t:'Sentarme en el columpio',n:'s2a'},
+        {t:'Regresar al basurero-oso',n:'s1b'},
+      ]
+    },
+    s2a:{
+      level:'NIVEL 2 — PROFUNDIDAD',
+      ph:{id:'SUR-FONDOPARQUE-01',label:'Fondo del parque · barda · apertura que no estaba · otro espacio',ratio:'tall'},
+      title:'Al fondo del parque hay una apertura que no estaba.',
+      text:`La barda del fondo tiene una apertura. No es una puerta: la barda simplemente termina y empieza de nuevo unos metros más allá, dejando un espacio de entrada.\n\nDel otro lado: <em>otro parque. Idéntico.</em> Mismos árboles. Mismos focos. Mismo oso-basurero. Mismo columpio moviéndose.\n\n<strong>En la banca del segundo parque hay alguien sentado.</strong>`,
+      choices:[
+        {t:'Cruzar la apertura',n:'end_espejo'},
+        {t:'No cruzar',n:'end_banca'},
+      ]
+    },
+    s2b:{
+      level:'NIVEL 2 — REGRESO',
+      ph:{id:'SUR-ENTRADA-01',label:'Entrada al parque · calle · tu colonia · algo desplazado',ratio:'wide'},
+      title:'La entrada al parque no es la misma.',
+      text:`Regresaste. La entrada está. La calle también. Pero algo está ligeramente desplazado. <em>Como si tomaron el parque y lo rotaron dos grados.</em>\n\nTu casa debería estar a la derecha. Ahora está a la izquierda. Los nombres de las calles son los mismos pero en diferente orden.\n\n<strong>Tu teléfono dice que estás donde siempre estás.</strong>`,
+      choices:[
+        {t:'Confiar en el teléfono',n:'end_telefono'},
+        {t:'Confiar en lo que ves',n:'end_banca'},
+      ]
+    },
+    s2c:{
+      level:'NIVEL 2 — EL PAPEL',
+      ph:{id:'SUR-PAPEL-01',label:'Papel doblado · instrucciones · letra conocida',ratio:'wide'},
+      title:'El papel tiene instrucciones escritas con tu letra.',
+      text:`Las instrucciones dicen a dónde ir. Paso por paso. Desde el parque hasta un lugar que reconoces: <em>tu casa.</em> Pero las instrucciones son para llegar desde adentro del parque, como si el parque fuera más grande de lo que parece desde afuera.\n\nPaso 7: <em>"Cuando llegues a la banca, no te sientes. Ya alguien está sentado."</em>\n\n<strong>Volteas hacia la banca. Ya alguien está sentado.</strong>`,
+      choices:[
+        {t:'Seguir las instrucciones',n:'end_instrucciones'},
+        {t:'Acercarme a la banca',n:'end_espejo'},
+      ]
+    },
+    end_espejo:{ending:true,label:'FINAL — EL SEGUNDO PARQUE',ph:{id:'SUR-END-ESP-01',label:'Segundo parque · banca · figura sentada · tu cara',ratio:'tall'},
+      title:'La persona en la banca tienes tu cara.',
+      text:`Cruzaste. La figura levantó la vista cuando llegaste. Tienes tu cara. Tu ropa. Tu teléfono en la mano mostrando el mapa de dónde estás.\n\n<em>Ninguno de los dos dijo nada.</em> No había nada que decir que el otro no supiera ya.\n\nEn algún punto, uno de los dos se fue. <class class="ac">No sabes si fuiste tú.</class>`
+    },
+    end_banca:{ending:true,label:'FINAL — LA BANCA',ph:{id:'SUR-END-BNC-01',label:'Banca de parque · noche · charcos · oso al fondo mirando',ratio:'wide'},
+      title:'La banca siempre estuvo aquí. Tú también.',
+      text:`Te sentaste. El parque es el parque. El oso-basurero sigue con la boca abierta. El columpio oscila.\n\nLlevas aquí el tiempo suficiente para que la ropa se moje con el rocío. <em>No recuerdas haber llegado.</em> Solo recuerdas estar aquí, en esta banca, con esta sensación de haber olvidado algo importante en algún lugar del sur de Saltillo.\n\n<class class="ac">La ciudad tampoco recuerda que te fuiste.</class>`
+    },
+    end_telefono:{ending:true,label:'FINAL — EL MAPA',ph:{id:'SUR-END-MAP-01',label:'Teléfono · mapa · punto azul en lugar incorrecto o correcto',ratio:'wide'},
+      title:'El mapa tiene razón. Tú también. Los dos no pueden tener razón.',
+      text:`Confiaste en el teléfono. El punto azul indicaba casa. Llegaste.\n\nTu casa estaba a la derecha, como siempre. <em>El teléfono dijo que llegaste.</em> Adentro, todo en su lugar.\n\nExcepto el cuadro del pasillo. Está colgado al revés. Lleva ahí dos días y <class class="ac">nadie lo colgó al revés. Ni tú ni nadie.</class>`
+    },
+    end_instrucciones:{ending:true,label:'FINAL — LAS INSTRUCCIONES',ph:{id:'SUR-END-INS-01',label:'Entrada de casa · puerta · luz interior · las instrucciones te trajeron aquí',ratio:'tall'},
+      title:'Las instrucciones eran para llegar a casa.',
+      text:`Seguiste los pasos. Funcionaron. Llegaste a tu puerta.\n\nEl papel con instrucciones dice en el paso final: <em>"Ya llegaste. Ahora guarda este papel."</em>\n\nLo guardas. Semanas después lo encuentras en un cajón. Lees los pasos otra vez. El paso 7 dice: "Cuando llegues a la banca, <class class="ac">saluda. Ya alguien está esperando.</class>"`
+    },
+  }
+},
+
+/* ─── 4. ORIENTE ────────────────────────────── */
+oriente:{
+  zona:'Zona Oriente',
+  ticker:'LA SALLE · INDUSTRIAS · PERIFÉRICO · EL DISTRIBUIDOR · CALLES QUE HUELEN A LLANTA QUEMADA · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — INFRAESTRUCTURA',
+      ph:{id:'ORI-DIST-01',label:'Distribuidor vial Carranza · paso peatonal · noche · tres niveles · adoquín',ratio:'tall'},
+      title:'Tres niveles. Arriba, vehículos que no saben que existes.',
+      text:`El distribuidor vial de Venustiano Carranza de noche. Bajaste las escaleras peatonales. Sobre ti cruzan autos que no saben que existes. Huele a llanta quemada y tierra mojada.\n\nEl adoquín del camino se extiende más allá de donde debería terminar. <em>El camino tiene el ancho exacto de un cuerpo.</em>\n\n<strong>En los peldaños hay letras pintadas: M. C. S.</strong> Alguien las puso ahí con cuidado.`,
+      choices:[
+        {t:'Seguir el camino al fondo',n:'s1a'},
+        {t:'Leer las letras en voz alta',n:'s1b'},
+        {t:'Subir al nivel superior del distribuidor',n:'s1c'},
+      ]
+    },
+    s1a:{level:'NIVEL 1 — EL CAMINO',ph:{id:'ORI-CAMINO-01',label:'Paso peatonal bajo distribuidor · adoquín mojado · luz única · arcos de concreto',ratio:'tall'},
+      title:'El camino no termina en la otra calle.',
+      text:`El camino peatonal debería tener ochenta metros. Llevas caminando ciento veinte. Los arcos de concreto del distribuidor se repiten sobre ti con una regularidad que no es arquitectónica: es ansiosa.\n\n<em>La ciudad aparece al fondo entre los arcos.</em> Pequeña. Como si perteneciera a otra escala. Como si tú eres más grande de lo que deberías ser aquí abajo.\n\n<strong>O la ciudad es más pequeña.</strong>`,
+      choices:[
+        {t:'Llegar al fondo',n:'s2a'},
+        {t:'Regresar',n:'s2b'},
+      ]
+    },
+    s1b:{level:'NIVEL 1 — RESONANCIA',ph:{id:'ORI-ECO-01',label:'Escaleras distribuidor · letras pintadas · eco bajo el concreto',ratio:'wide'},
+      title:'El eco tardó cuatro segundos en regresar.',
+      text:`Dijiste las letras: M. C. S. El eco tardó cuatro segundos. Demasiado para este espacio.\n\nCuando regresó tenía una frecuencia diferente. <em>Como si el distribuidor modificó algo.</em> Una segunda voz. Casi la tuya.\n\nDespués del eco: pasos desde el fondo del camino. Regulares. <strong>Cuentan hacia abajo.</strong>`,
+      choices:[
+        {t:'Quedarme quieto',n:'end_eco'},
+        {t:'Subir rápido',n:'s1c'},
+      ]
+    },
+    s1c:{level:'NIVEL 1 — ALTURA',ph:{id:'ORI-SUPERIOR-01',label:'Vista superior distribuidor · puentes de concreto · ciudad al fondo · noche',ratio:'tall'},
+      title:'Desde arriba, los puentes se bifurcan como algo vivo.',
+      text:`Los puentes de concreto se bifurcan en el cielo como algo que creció sin que nadie lo planeara. La ciudad al fondo entre los arcos, pequeña.\n\nEstás en el nivel medio. <em>No arriba del todo ni abajo del todo.</em> Los autos pasan a tu lado sin espacio suficiente. No te rozan.\n\n<strong>Como si eres de otro material que los vehículos no detectan.</strong>`,
+      choices:[
+        {t:'Bajar al nivel más profundo',n:'s1a'},
+        {t:'Quedarte en el nivel medio',n:'s2b'},
+      ]
+    },
+    s2a:{level:'NIVEL 2 — EL FONDO',ph:{id:'ORI-FONDOCAMINO-01',label:'Final del paso peatonal · apertura · otra ciudad o la misma',ratio:'tall'},
+      title:'El fondo del camino da a otra versión del mismo cruce.',
+      text:`Llegaste al final. La salida da a una calle que reconoces. Pero el distribuidor desde este lado se ve diferente. <em>Los arcos están donde no deberían estar.</em>\n\nTu teléfono dice que estás exactamente donde siempre estás. El mapa muestra el punto azul en el lugar correcto.\n\n<strong>El zumbido del alumbrado del distribuidor dice otra cosa.</strong>`,
+      choices:[
+        {t:'Confiar en el teléfono',n:'end_mapa'},
+        {t:'Regresar por donde vine',n:'end_regreso'},
+      ]
+    },
+    s2b:{level:'NIVEL 2 — EL PUENTE',ph:{id:'ORI-PUENTE-01',label:'Puente peatonal · barandal verde · vista hacia abajo · tráfico que no hace ruido',ratio:'wide'},
+      title:'El tráfico bajo el puente no hace ruido.',
+      text:`Los autos pasan pero no se escuchan. Ves las luces moverse, ves los cuerpos metálicos cruzar, pero el sonido no llega hasta aquí.\n\n<em>O no hay sonido. O solo tú no lo escuchas.</em> Las dos opciones son igualmente perturbadoras.\n\nEn el barandal del puente hay marcas. No graffiti: marcas de manos. Como si alguien se aferró al barandal con mucha fuerza. <strong>Las marcas están en el lado exterior.</strong>`,
+      choices:[
+        {t:'Mirar hacia abajo',n:'end_abajo'},
+        {t:'Cruzar el puente',n:'end_mapa'},
+      ]
+    },
+    end_eco:{ending:true,label:'FINAL — EL SILENCIO',ph:{id:'ORI-END-ECO-01',label:'Distribuidor · pasos que llegaron y pasaron · solo el zumbido',ratio:'tall'},
+      title:'Los pasos pasaron de largo. El zumbido no.',
+      text:`Te quedaste tan quieto que los pasos llegaron, pasaron, y se fueron sin encontrarte.\n\nEl distribuidor volvió a su estado normal. Los autos. El ruido. El olor a llanta quemada.\n\nBajaste al final del camino peatonal. Todo en su lugar. <em>Excepto que llevas caminando por el distribuidor</em> <class class="ac">todos los días desde entonces, siempre a la misma hora, sin recordar por qué.</class>`
+    },
+    end_mapa:{ending:true,label:'FINAL — EL PUNTO AZUL',ph:{id:'ORI-END-MAP-01',label:'Teléfono · mapa · punto azul moviéndose solo',ratio:'wide'},
+      title:'El punto azul se movió sin que tú te movieras.',
+      text:`Confiaste en el teléfono. Caminaste siguiendo el punto azul. Llegaste a casa.\n\nHoras después, abriste el mapa otra vez. El punto azul seguía en el distribuidor. <em>Moviéndose en círculos.</em>\n\nCerraste la app. La abriste. <class class="ac">El punto azul seguía ahí. Tú también estabas en casa. Los dos al mismo tiempo.</class>`
+    },
+    end_regreso:{ending:true,label:'FINAL — EL REGRESO',ph:{id:'ORI-END-REG-01',label:'Escaleras de subida · letras MCS · barandal frío · luz al fondo',ratio:'tall'},
+      title:'Las escaleras de regreso tienen las mismas letras.',
+      text:`Subiste. Las escaleras tienen las letras en los peldaños: M. C. S. Las mismas. <em>En el mismo orden.</em>\n\nLlegaste arriba. El distribuidor. Los autos. La noche normal de Saltillo oriente.\n\nAlguien en el camino peatonal de abajo grita M. C. S. con tu voz. <class class="ac">El eco tarda cuatro segundos en llegar hasta ti.</class>`
+    },
+    end_abajo:{ending:true,label:'FINAL — HACIA ABAJO',ph:{id:'ORI-END-ABA-01',label:'Vista desde puente hacia abajo · tráfico · marcas en barandal · manos',ratio:'wide'},
+      title:'Desde abajo, alguien mira hacia arriba.',
+      text:`Miraste hacia abajo. Entre los autos que pasan, <em>en el camino peatonal de abajo</em>, hay alguien mirando hacia arriba. Mirándote a ti.\n\nLa distancia no te permite ver el rostro. La postura sí te resulta familiar.\n\n<class class="ac">La forma en que están parados. La inclinación de la cabeza. El teléfono en la mano derecha.</class> Exactamente como tú ahora mismo.`
+    },
+  }
+},
+
+/* ─── 5. PONIENTE ───────────────────────────── */
+poniente:{
+  zona:'Zona Poniente',
+  ticker:'PLAZA REAL · VILLAS DEL ROBLE · EUREKA · SORIANA COSS · ESCALERAS QUE YA CONOCES · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — CENTRO COMERCIAL',
+      ph:{id:'PON-SORBANCA-01',label:'Soriana San Isidro · plaza vaciada · banca · luminarias naranjas · tiendas cerradas',ratio:'tall'},
+      title:'El domingo antes del cierre tiene su propia temperatura.',
+      text:`Soriana San Isidro. Un domingo. La hora antes del cierre.\n\nPisos vintage. Bancas viejas. Tiendas con las rejas a medio bajar. Las luminarias de globo naranja encendidas aunque todavía hay luz.\n\n<em>Gorditas El Borrado · Las Mejores de Saltillo.</em> La reja cerrada. El letrero encendido. Las sillas del restaurante alineadas perfectamente, esperando a clientes que ya no van a llegar hoy.\n\n<strong>Todo indica que si cruzas más allá del umbral, algo podría pasarte.</strong>`,
+      choices:[
+        {t:'Ir al estacionamiento de Soriana Coss',n:'s1a'},
+        {t:'Explorar el pasillo del fondo',n:'s1b'},
+        {t:'Sentarme en la banca a esperar el cierre',n:'s1c'},
+      ]
+    },
+    s1a:{level:'NIVEL 1 — ESTACIONAMIENTO',ph:{id:'PON-ESTACION-01',label:'Estacionamiento Soriana Coss · carrito rojo · vigas de acero · señal ALTO · noche',ratio:'tall'},
+      title:'El carrito lleva semanas ahí. O más.',
+      text:`El estacionamiento vacío. El carrito rojo en el centro, perfectamente alineado entre dos columnas. <em>Como colocado con intención.</em>\n\nLas vigas de acero en diagonal sobre ti forman una geometría que no parece diseñada para humanos. La señal de ALTO al fondo es innecesaria. No hay autos.\n\nEn la canastilla del carrito hay una lista del súper. La última línea está subrayada: <strong>tú.</strong>`,
+      choices:[
+        {t:'Tomar la lista',n:'s2a'},
+        {t:'Subir a las escaleras del estacionamiento',n:'s2b'},
+      ]
+    },
+    s1b:{level:'NIVEL 1 — PASILLO VIVO',ph:{id:'PON-SORFRUTA-01',label:'Supermercado abierto · sección frutas · nadie · señor del cartel sonriendo · demasiada luz',ratio:'tall'},
+      title:'El supermercado activo es más inquietante que el vacío.',
+      text:`Las manzanas siguen verdes. Los precios marcados. El señor del cartel de Julio Regalado sonríe. <em>Lleva sonriendo desde antes de que nacieras.</em>\n\nNo hay nadie. Hay demasiada fruta para nadie. Demasiadas señales apuntando a productos que nadie va a comprar esta noche.\n\nAl fondo: <strong>el pasillo de refrigeradores. Sus puertas rosas se repiten hacia un punto que no termina.</strong>`,
+      choices:[
+        {t:'Ir al pasillo de refrigeradores',n:'s2c'},
+        {t:'Buscar a alguien en las cajas',n:'s2b'},
+      ]
+    },
+    s1c:{level:'NIVEL 1 — LA BANCA',ph:{id:'PON-BANCA-01',label:'Banca · Gorditas El Borrado · reloj · señor del cartel',ratio:'wide'},
+      title:'El reloj de la plaza lleva en 6:00 PM desde siempre.',
+      text:`Te sentaste. El señor de Julio Regalado te mira desde el cartel. <em>Siempre sonriendo.</em>\n\nEl reloj de la plaza marca las 6:00 PM. Llevas sentado suficiente tiempo para que oscurezca afuera. El reloj sigue en 6:00 PM.\n\nAlgo en el aire huele a comida de otro año. <strong>Como si el olfato tiene memoria propia y esta plaza la activó.</strong>`,
+      choices:[
+        {t:'Ir al estacionamiento antes del cierre',n:'s1a'},
+        {t:'Quedarme hasta que alguien me diga que salga',n:'end_banca'},
+      ]
+    },
+    s2a:{level:'NIVEL 2 — LA LISTA',ph:{id:'PON-LISTA-01',label:'Lista en carrito · letra azul · última línea subrayada',ratio:'wide'},
+      title:'Tu nombre en una lista que encontraste hace diez segundos.',
+      text:`Leche. Jabón. Pan. Limones. Y al final, subrayado: <em>tú.</em>\n\nNo sabes si significa que alguien fue a comprarte. O que alguien te puso en la lista porque ya no estás.\n\nLas luces del estacionamiento zumban con la misma frecuencia que los fluorescentes de La Parisina. <strong>60 Hz.</strong>`,
+      choices:[
+        {t:'Doblar la lista y guardarla',n:'end_lista'},
+        {t:'Gritar para que alguien conteste',n:'end_eco'},
+      ]
+    },
+    s2b:{level:'NIVEL 2 — ESCALERAS PLAZA REAL',ph:{id:'PON-ESCALERAS-01',label:'Escaleras Plaza Real · luz fría oval · peldaños oscuros · poste central divisor',ratio:'tall'},
+      title:'Las escaleras llevan a un piso que no estaba.',
+      text:`El poste en el centro divide la escalera exactamente a la mitad. Arriba: luz fría oval. Abajo: un tapete negro.\n\nCuentas los peldaños sin querer. <em>Doce.</em> Los incrustados tienen forma de ojos pequeños que reflejan.\n\n<strong>¿Hacia dónde suben? ¿Hacia dónde bajan? Depende de cuándo llegaste.</strong>`,
+      choices:[
+        {t:'Subir',n:'end_arriba'},
+        {t:'Bajar',n:'end_abajo'},
+        {t:'Quedarme en el umbral',n:'end_umbral'},
+      ]
+    },
+    s2c:{level:'NIVEL 2 — EL PASILLO LARGO',ph:{id:'PON-REFRI-01',label:'Pasillo de refrigeradores · luz rosa · carrito solo · pasillo que no termina',ratio:'tall'},
+      title:'El pasillo no termina donde debería.',
+      text:`Los refrigeradores a tu izquierda tienen puertas rosas. El carrito en el centro del pasillo no lo dejaste tú. O sí. No estás seguro.\n\nLlevas caminando tres minutos. <em>Sientes veinte.</em> El suelo reluce. Cada paso suena igual. El techo se repite. Los fluorescentes se repiten.\n\n<strong>El pasillo se extiende más de lo que cabe en el edificio.</strong>`,
+      choices:[
+        {t:'Seguir avanzando',n:'end_pasillo'},
+        {t:'Abrir un refrigerador',n:'end_refri'},
+        {t:'Correr de regreso',n:'end_regreso'},
+      ]
+    },
+    end_banca:{ending:true,label:'FINAL — LA BANCA SIEMPRE',ph:{id:'PON-END-BNC-01',label:'Banca · noche · luminarias · nadie · tú como parte del escenario',ratio:'wide'},
+      title:'Eres el que siempre está en la banca.',
+      text:`Nadie vino a decirte que salieras. Las luces de la plaza se apagaron en orden, de afuera hacia adentro. <em>Las de tu banca, las últimas.</em>\n\nLlevas aquí suficiente tiempo para volverte parte del espacio. La persona que siempre está. La que los guardias no ven. La que los últimos clientes no notan.\n\n<class class="ac">La banca es más cómoda de lo que pensabas cuando te sentaste.</class>`
+    },
+    end_lista:{ending:true,label:'FINAL — EL NOMBRE',ph:{id:'PON-END-LIST-01',label:'Lista doblada · bolsillo · estacionamiento · carrito vacío ahora',ratio:'wide'},
+      title:'Guardaste la lista. El carrito ya no está.',
+      text:`Doblaste el papel. Lo guardaste en el bolsillo. Cuando volviste a mirar, el carrito ya no estaba.\n\nSubiste al nivel de la plaza. Todo cerrado. Las puertas del estacionamiento, cerradas. <em>No recuerdas haber entrado.</em>\n\nEn el bolsillo, el papel. Lo sacas. <class class="ac">Ahora tiene dos nombres subrayados.</class>`
+    },
+    end_eco:{ending:true,label:'FINAL — EL ECO',ph:{id:'PON-END-ECO-01',label:'Estacionamiento · eco · pasos contando · señal ALTO al fondo',ratio:'tall'},
+      title:'Diez. Nueve. Ocho.',
+      text:`Gritaste. El eco tardó cuatro segundos. Cuando regresó tenía otra frecuencia.\n\nDespués: pasos desde el fondo del estacionamiento. Regulares. Con demasiada precisión. <em>Diez. Nueve. Ocho.</em>\n\nLa señal de ALTO al fondo era innecesaria. Ahora tiene sentido. <class class="ac">Te quedaste tan quieto que los pasos pasaron de largo. Todavía no te mueves.</class>`
+    },
+    end_arriba:{ending:true,label:'FINAL — EL PISO DE ARRIBA',ph:{id:'PON-END-ARR-01',label:'Piso superior Plaza Real · vista · ciudad poniente · luz que no es la correcta',ratio:'tall'},
+      title:'El piso de arriba tiene la luz de otro año.',
+      text:`Subiste. El piso de arriba de Plaza Real tiene la misma luz de cuando eras chico y esto era nuevo. <em>La luz de la inauguración.</em>\n\nLos locales están abiertos. Las personas van y vienen. Nadie que reconozcas, pero tampoco desconocidos. Personas en el punto medio.\n\n<class class="ac">Estás en el Saltillo de hace veinte años. O el de hace veinte años está en ti.</class>`
+    },
+    end_abajo:{ending:true,label:'FINAL — EL SÓTANO',ph:{id:'PON-END-ABA-01',label:'Sótano · sin luz correcta · objetos de otro tiempo · temperatura equivocada',ratio:'tall'},
+      title:'El sótano tiene objetos de un tiempo que no fue tuyo.',
+      text:`Bajaste. Hay un sótano que no estaba en el mapa. Tiene cajas de Gamesa. Televisores de tubo. <em>Cosas de cuando esto era otro tipo de espacio.</em>\n\nUn televisor está encendido. La estática tiene una forma que reconoces: es la planta baja de la plaza, vacía, con una persona sentada en la banca.\n\n<class class="ac">La persona en la pantalla eres tú.</class>`
+    },
+    end_umbral:{ending:true,label:'FINAL — EL ESCALÓN DEL MEDIO',ph:{id:'PON-END-UMB-01',label:'Escalón intermedio · ni arriba ni abajo · umbral',ratio:'wide'},
+      title:'Decidiste no subir ni bajar.',
+      text:`Del latín <em>limen</em>: umbral. Zona donde algo dejó de ser lo que era pero todavía no se convierte en otra cosa.\n\nTe quedaste en el escalón del medio. La posición más honesta. <em>Y la más incómoda.</em>\n\n<class class="ac">Llevas ahí suficiente tiempo para saber que el umbral también es un lugar.</class>`
+    },
+    end_pasillo:{ending:true,label:'FINAL — EL PASILLO SIN FIN',ph:{id:'PON-END-PAS-01',label:'Pasillo · refrigeradores infinitos · tú como punto en perspectiva',ratio:'tall'},
+      title:'Sigues caminando. El pasillo sigue.',
+      text:`Los refrigeradores se repiten. Las luces se repiten. Tu reflejo en las puertas rosas se repite. <em>Llevas caminando el tiempo suficiente para olvidar qué buscabas.</em>\n\nEl pasillo no es una trampa. Es una consecuencia. De entrar. De seguir. De no girar cuando todavía podías.\n\n<class class="ac">Sigues caminando. Sigue.</class>`
+    },
+    end_refri:{ending:true,label:'FINAL — EL FRÍO',ph:{id:'PON-END-FRI-01',label:'Puerta de refrigerador abierta · frío · olor equivocado · producto sin nombre',ratio:'wide'},
+      title:'El frío huele a ropa guardada de alguien que ya no está.',
+      text:`Abriste la puerta. El frío que sale no es el frío normal. Huele a un cuarto cerrado. <em>A ropa de alguien que murió.</em>\n\nEl producto en el estante de abajo no tiene nombre. Solo un código de barras y una fecha de caducidad: mañana.\n\n<class class="ac">Cerraste la puerta. El olor se quedó contigo.</class>`
+    },
+    end_regreso:{ending:true,label:'FINAL — EL REGRESO IMPOSIBLE',ph:{id:'PON-END-REG-01',label:'Pasillo visto desde el fondo · no es el mismo desde aquí',ratio:'tall'},
+      title:'El camino de regreso no es el mismo pasillo.',
+      text:`Corriste de regreso. El pasillo que recorriste ya no es el mismo. <em>Los refrigeradores están en diferente orden.</em> O no hay refrigeradores. O siempre fueron estos.\n\nLlegaste a una salida que no es la que entraste. La plaza del otro lado es la misma pero el ángulo es diferente.\n\n<class class="ac">Eso es suficiente para que todo sea diferente.</class>`
+    },
+  }
+},
+
+/* ─── 6. CARRETERA ──────────────────────────── */
+carretera:{
+  zona:'Zona Carretera',
+  ticker:'AUTOPISTA MONTERREY · ARTEAGA · EL BAJÍO · MOTEL DE PASO · OXXO A LAS 3 AM · KILÓMETRO SIN NOMBRE · ',
+  nodes:{
+    s0:{
+      level:'NIVEL 0 — LA CARRETERA',
+      ph:{id:'CAR-ESTACION-01',label:'Estacionamiento en carretera · lluvia · luz verde · sin autos · motel al fondo',ratio:'tall'},
+      title:'El Oxxo a las 3 AM es el espacio liminal más honesto.',
+      text:`Estás en la carretera. No importa cuál: la de Monterrey, la de Arteaga, la del Bajío. Todas tienen un tramo entre las 2 y las 4 AM que funciona igual.\n\nEl Oxxo está abierto. Siempre está abierto. <em>El empleado no levanta la vista cuando entras.</em> La luz fluorescente zumba exactamente como en todos los Oxxo del mundo.\n\n<strong>60 Hz. Como en La Parisina. Como en el distribuidor. Como en el supermercado antes del cierre.</strong>`,
+      choices:[
+        {t:'Hablar con el empleado',n:'s1a'},
+        {t:'Buscar algo en los refrigeradores',n:'s1b'},
+        {t:'Salir y seguir manejando',n:'s1c'},
+      ]
+    },
+    s1a:{level:'NIVEL 1 — EL EMPLEADO',ph:{id:'CAR-OXXO-01',label:'Interior Oxxo carretera · empleado sin levantar la vista · refrigeradores · luz fría',ratio:'tall'},
+      title:'El empleado te contestó sin levantar la vista.',
+      text:`Le preguntaste a qué kilómetro estás. Contestó sin levantar la vista del teléfono: "Aquí no hay kilómetro."\n\n<em>Todas las carreteras tienen kilómetro.</em> Le dijiste eso. Levantó la vista por primera vez.\n\nSus ojos son del color de la estática de televisión. <strong>No de café ni de negro: de estática.</strong>`,
+      choices:[
+        {t:'Preguntarle qué es esto',n:'s2a'},
+        {t:'Salir corriendo',n:'s1c'},
+      ]
+    },
+    s1b:{level:'NIVEL 1 — REFRIGERADORES',ph:{id:'CAR-REFRI-01',label:'Refrigeradores Oxxo · productos normales · uno sin etiqueta · frío equivocado',ratio:'wide'},
+      title:'Uno de los refrigeradores no tiene los productos correctos.',
+      text:`Los refrigeradores de Oxxo siempre tienen lo mismo. Aguas. Cervezas. Jugos.\n\nEl tercer refrigerador tiene productos sin etiqueta. Las botellas son del tamaño correcto, del color correcto. Pero <em>sin nombre, sin código, sin fecha de caducidad.</em>\n\nEl frío de ese refrigerador en particular huele a <strong>un cuarto cerrado. A tiempo detenido.</strong>`,
+      choices:[
+        {t:'Abrir el refrigerador sin etiqueta',n:'s2b'},
+        {t:'Hablar con el empleado sobre eso',n:'s1a'},
+      ]
+    },
+    s1c:{level:'NIVEL 1 — LA CARRETERA AFUERA',ph:{id:'CAR-CARRETERA-01',label:'Carretera · noche · sin autos · líneas que no terminan · una sola luz',ratio:'tall'},
+      title:'La carretera afuera no tiene autos.',
+      text:`Saliste. La carretera está vacía. En ambas direcciones. Las líneas blancas se pierden hacia un punto que no existe.\n\n<em>Saltillo debería estar a treinta kilómetros en una dirección.</em> Monterrey en la otra. Pero las dos direcciones parecen idénticas.\n\nTu auto está donde lo dejaste. El motor todavía caliente. <strong>La radio está encendida aunque la apagaste al salir.</strong>`,
+      choices:[
+        {t:'Escuchar qué dice la radio',n:'s2c'},
+        {t:'Arrancar hacia Saltillo',n:'s2b'},
+        {t:'Regresar al Oxxo',n:'s1a'},
+      ]
+    },
+    s2a:{level:'NIVEL 2 — EL EMPLEADO HABLA',ph:{id:'CAR-EMPLEADO-01',label:'Empleado Oxxo · ojos estática · mostrador · luz que parpadea',ratio:'wide'},
+      title:'El empleado dijo: "Llevas aquí más de lo que crees."',
+      text:`Lo dijo sin misterio. Como se dice el precio de un café.\n\nTe preguntó si querías algo para el camino. <em>Dijiste que a dónde iba el camino.</em> Dijo: "A donde siempre va. Al siguiente Oxxo." Sonrió.\n\nLa sonrisa era normal. Eso era lo perturbador: <strong>era perfectamente normal.</strong>`,
+      choices:[
+        {t:'Comprar algo y salir',n:'end_compra'},
+        {t:'Quedarse a hablar',n:'end_empleado'},
+      ]
+    },
+    s2b:{level:'NIVEL 2 — EL CAMINO',ph:{id:'CAR-MANEJAR-01',label:'Interior auto · carretera vacía · kilómetro que no existe · radio encendida',ratio:'wide'},
+      title:'Manejaste veinte minutos. El kilómetro no cambió.',
+      text:`Arrancaste. Las líneas blancas pasaban bajo el auto. El odómetro sumaba kilómetros. <em>El letrero de kilómetro en la orilla de la carretera mostraba siempre el mismo número.</em>\n\nApagaste la radio. Se volvió a encender. Dice el nombre de una estación de radio que no existe en el dial normal.\n\n<strong>La voz de la locutora dice: "Y ahora, para los que están en el kilómetro sin nombre..."</strong>`,
+      choices:[
+        {t:'Escuchar el programa',n:'s2c'},
+        {t:'Parar el auto',n:'end_parar'},
+      ]
+    },
+    s2c:{level:'NIVEL 2 — LA RADIO',ph:{id:'CAR-RADIO-01',label:'Radio del auto · dial · estación inexistente · voz de locutora',ratio:'wide'},
+      title:'La locutora sabe que estás escuchando.',
+      text:`La locutora dijo: "Esta canción es para el conductor del auto detenido en el kilómetro sin número. Lleva escuchando desde que salió del Oxxo."\n\n<em>No le dijiste a nadie que parabas en el Oxxo.</em>\n\nLa canción que puso era una que no habías escuchado antes. Pero la letra la sabías. <strong>De memoria. Sin saber cómo.</strong>`,
+      choices:[
+        {t:'Escuchar hasta el final',n:'end_cancion'},
+        {t:'Apagar la radio y manejar',n:'end_manejar'},
+      ]
+    },
+    end_compra:{ending:true,label:'FINAL — EL CAMINO',ph:{id:'CAR-END-COM-01',label:'Carretera de noche · Saltillo al fondo · luces · algo en el retrovisor',ratio:'tall'},
+      title:'Compraste un café. El kilómetro apareció.',
+      text:`Saliste con el café. La carretera tenía kilómetro otra vez. Saltillo en una dirección, Monterrey en la otra. Todo en orden.\n\nManejaste los treinta kilómetros de regreso. En el retrovisor, en algún punto entre el kilómetro quince y el dieciséis: <em>el Oxxo detrás de ti seguía encendido.</em>\n\nDos kilómetros más allá, volviste a verlo en el retrovisor. <class class="ac">El mismo Oxxo. La misma luz. En un kilómetro diferente.</class>`
+    },
+    end_empleado:{ending:true,label:'FINAL — EL TURNO',ph:{id:'CAR-END-EMP-01',label:'Mostrador Oxxo · dos empleados · tú con uniforme · 6 AM que no llega',ratio:'wide'},
+      title:'Te quedaste a hablar. El turno de las 6 no llegó.',
+      text:`Hablaron. El empleado sabía cosas sobre Saltillo que solo alguien que lleva décadas en la carretera podría saber. <em>Los negocios que cerraron. Los que abrieron.</em> Los kilómetros que cambiaron de número.\n\nA las 5:58 AM, esperando el cambio de turno, el empleado dijo: "Tú te quedas, ¿verdad?" No como pregunta. Como confirmación.\n\n<class class="ac">El sol no salió a las 6. Son las 6:00 PM de nuevo.</class>`
+    },
+    end_cancion:{ending:true,label:'FINAL — LA CANCIÓN',ph:{id:'CAR-END-CAN-01',label:'Auto estacionado · carretera · radio encendida · letra de canción en ventana',ratio:'wide'},
+      title:'La canción terminó. La letra la sabías de antes.',
+      text:`La locutora dijo: "Y así termina el programa de esta noche, desde el kilómetro sin nombre, para los que todavía no llegan a ningún lado."\n\nApagaste la radio. Arrancaste. Saltillo apareció a los treinta kilómetros.\n\nDos semanas después, en una tienda de discos de segunda mano en el centro de Saltillo, encontraste un casete con la canción. <em>Lanzado hace cuarenta años.</em> <class class="ac">Arriba del casete, escrito a mano, tu nombre y el kilómetro.</class>`
+    },
+    end_manejar:{ending:true,label:'FINAL — EL KILÓMETRO',ph:{id:'CAR-END-MAN-01',label:'Carretera · Saltillo a la vista · letrero del kilómetro · número correcto',ratio:'tall'},
+      title:'Apagaste la radio. El kilómetro volvió.',
+      text:`Manejaste en silencio. El kilómetro reapareció en los letreros. Saltillo a treinta kilómetros. Normal.\n\nLlegaste. Estacionaste. Todo en su lugar.\n\nA la mañana siguiente, en el carro, el radio estaba encendido en la frecuencia de la estación que no existe. <em>Reproduciendo la misma canción.</em> <class class="ac">En el punto exacto donde la habías apagado.</class>`
+    },
+    end_parar:{ending:true,label:'FINAL — EL AUTO DETENIDO',ph:{id:'CAR-END-PAR-01',label:'Auto detenido · acotamiento · carretera vacía · interior · radio sola',ratio:'wide'},
+      title:'Paraste el auto. Llevas aquí más de lo que crees.',
+      text:`Paraste en el acotamiento. Apagaste el motor. La radio siguió encendida.\n\nLa locutora dijo tu nombre. <em>Dos veces.</em> Con el apellido correcto.\n\nArrancaste. El odómetro marcaba el mismo número que cuando saliste del Oxxo. <class class="ac">No manejaste ni un kilómetro. Llevas detenido desde que entraste al Oxxo.</class>`
+    },
+  }
+}
+
+}; // fin HISTORIAS
+
+/* ══════════════════════════════════════════════
+   COORDENADAS DE SALTILLO Y DETECCIÓN DE ZONA
+══════════════════════════════════════════════ */
+// Centro aprox: 25.4232, -100.9933
+function detectZone(lat, lng) {
+  const cLat = 25.4232, cLng = -100.9933;
+  const dLat = lat - cLat, dLng = lng - cLng;
+  const dist = Math.sqrt(dLat*dLat + dLng*dLng);
+  // Si está lejos de Saltillo (>0.5 grados ~55km) = carretera
+  if (dist > 0.45) return 'carretera';
+  // Centro: radio 0.03 (~3km)
+  if (dist < 0.03) return 'centro';
+  // Norte: lat > centro
+  if (dLat > 0.01) return 'norte';
+  // Sur: lat < centro
+  if (dLat < -0.01) return 'sur';
+  // Oriente: lng > centro (positivo)
+  if (dLng > 0.01) return 'oriente';
+  // Poniente: lng < centro
+  return 'poniente';
+}
+
+/* ══════════════════════════════════════════════
+   ENGINE
+══════════════════════════════════════════════ */
+let ZONA = null, HIST = [], CUR_STORY = null;
+
+function ph(p) {
+  if (!p) return '';
+  const cls = p.ratio === 'wide' ? 'wide' : 'tall';
+  return `<div class="vis-ph ${cls}">
+    <div class="vis-ph-grid"></div>
+    <div class="vis-ph-icon"><svg viewBox="0 0 48 48" fill="none" stroke="white" stroke-width="1"><rect x="4" y="8" width="40" height="32" rx="2"/><circle cx="16" cy="20" r="4"/><path d="M44 32L32 20 20 32 14 26 4 36"/></svg></div>
+    <div class="vis-ph-id">${p.id}</div>
+    <div class="vis-ph-label">${p.label}</div>
+  </div>`;
+}
+
+function fade(cb) {
+  const m = document.getElementById('mask');
+  m.classList.add('in');
+  setTimeout(()=>{ cb(); setTimeout(()=>m.classList.remove('in'),80); },550);
+}
+
+function showScreen(id) {
+  ['geoScreen','locScreen','storyScreen','endScreen'].forEach(s=>{
+    const el = document.getElementById(s);
+    el.classList.remove('on');
+    el.style.display='';
+  });
+  const target = document.getElementById(id);
+  target.classList.add('on');
+}
+
+function initSys() {
+  const now = new Date();
+  const h = now.getHours();
+  const t = now.toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+  const cls = h>=0&&h<5?'err':h>=22?'warn':'live';
+  const el = document.getElementById('sysTime');
+  el.className = cls; el.textContent = t;
+}
+
+function requestGeo() {
+  fade(()=>{
+    showScreen('locScreen');
+    document.getElementById('locZoneLabel').textContent = '';
+    if (!navigator.geolocation) { assignZone(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const z = detectZone(pos.coords.latitude, pos.coords.longitude);
+        const labels = {centro:'Centro Histórico',norte:'Zona Norte',sur:'Zona Sur',oriente:'Zona Oriente',poniente:'Zona Poniente',carretera:'Carretera'};
+        document.getElementById('locZoneLabel').textContent = labels[z];
+        setTimeout(()=>assignZone(z), 1200);
+      },
+      () => assignZone(null),
+      {timeout:8000}
+    );
+  });
+}
+
+function assignZone(z) {
+  if (!z) {
+    // Zona aleatoria si no hay geo
+    const zs = Object.keys(HISTORIAS);
+    z = zs[Math.floor(Math.random()*zs.length)];
+  }
+  ZONA = z;
+  CUR_STORY = HISTORIAS[z];
+  document.getElementById('sysZona').textContent = CUR_STORY.zona;
+  HIST = [];
+  fade(()=>{
+    showScreen('storyScreen');
+    renderNode('s0');
+  });
+}
+
+function renderNode(id) {
+  const n = CUR_STORY.nodes[id];
+  if (!n) return;
+  HIST.push(id);
+  const pct = Math.min((HIST.length/7)*100, 93);
+  document.getElementById('prog').style.width = pct+'%';
+  document.getElementById('sLevel').textContent = n.level||'NIVEL 0';
+  document.getElementById('tickerTxt').textContent = (CUR_STORY.ticker||'').repeat(4);
+
+  if (n.ending) { renderEnd(n); return; }
+
+  const choices = n.choices.map((c,i)=>
+    `<button class="ch" onclick="goTo('${c.n}')"><span class="ch-n">0${i+1}</span>${c.t}</button>`
+  ).join('');
+
+  document.getElementById('storyContent').innerHTML = `
+    <div class="fin">
+      <div class="zona-badge">${CUR_STORY.zona}</div>
+      ${ph(n.ph)}
+      <div class="story-body">
+        <div class="story-title">${n.title}</div>
+        <div class="story-text">${n.text.replace(/\n/g,'<br><br>')}</div>
+      </div>
+      <div class="choices">${choices}</div>
+    </div>`;
+  window.scrollTo(0,0);
+  // figura sutil aparece en profundidad
+  if (HIST.length >= 3) document.getElementById('sfig').classList.add('vis');
+}
+
+function renderEnd(n) {
+  showScreen('endScreen');
+  document.getElementById('endContent').innerHTML = `
+    <div class="fin">
+      <div class="zona-badge">${CUR_STORY.zona}</div>
+      <div class="end-label">${n.label}</div>
+      ${ph(n.ph)}
+      <div style="padding-top:1.2rem">
+        <div class="end-title">${n.title}</div>
+        <div class="end-text">${n.text.replace(/\n/g,'<br><br>').replace(/<class class="ac">/g,'<span class="ac">').replace(/<\/class>/g,'</span>')}</div>
+        <button class="restart-btn" onclick="restart()">Volver a entrar →</button>
+      </div>
+    </div>`;
+  document.getElementById('sfig').classList.remove('vis');
+  window.scrollTo(0,0);
+}
+
+function goTo(id) {
+  fade(()=>renderNode(id));
+}
+
+function restart() {
+  HIST = [];
+  fade(()=>{ showScreen('geoScreen'); document.getElementById('sfig').classList.remove('vis'); });
+}
+
+// Fix ac tags en story nodes
+document.addEventListener('DOMContentLoaded', ()=>{});
+// Parche para .ac en story-text
+const origRender = renderNode;
+
+initSys();
+
+// Parche para tags ac en texto de nodos
+function fixAc(html){
+  return html.replace(/<class class="ac">/g,'<span class="ac">').replace(/<\/class>/g,'</span>');
+}
+// Override renderNode para aplicar fixAc
+const _renderNode = renderNode;
+window.renderNode = function(id){
+  _renderNode(id);
+  const sc = document.getElementById('storyContent');
+  if(sc) sc.innerHTML = fixAc(sc.innerHTML);
+  const ec = document.getElementById('endContent');
+  if(ec) ec.innerHTML = fixAc(ec.innerHTML);
+};
+window.goTo = function(id){ fade(()=>window.renderNode(id)); };
+window.requestGeo = requestGeo;
+window.assignZone = assignZone;
+window.restart = restart;
+</script>
+</body>
+</html>
